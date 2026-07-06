@@ -1,0 +1,32 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+allowBuilds:
+  '@scarf/scarf': true
+  bcrypt: true
+  better-sqlite3: true
+  esbuild: true
+  msgpackr-extract: true
+  unrs-resolver: true
+overrides:
+  multer: ">=2.2.0"
+  uuid@<11.1.1: ">=11.1.1"
+  "@nyariv/sandboxjs": ">=0.9.6"
+  esbuild: ">=0.24.3"
+auditConfig:
+  ignoreGhsas:
+    - GHSA-v3m3-f69x-jf25
+minimumReleaseAgeExclude:
+  - '@expo/cli@57.0.2'
+  - '@expo/fingerprint@0.20.1'
+  - '@expo/inline-modules@0.1.1'
+  - '@expo/local-build-cache-provider@57.0.1'
+  - '@expo/metro-config@57.0.2'
+  - '@expo/prebuild-config@57.0.2'
+  - '@expo/router-server@57.0.1'
+  - babel-preset-expo@57.0.1
+  - expo-asset@57.0.2
+  - expo-constants@57.0.2
+  - expo-modules-autolinking@57.0.2
+  - expo@57.0.0
+  - vite@8.1.1

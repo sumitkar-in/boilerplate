@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.expo/
+.env
+*.log
+.DS_Store
+coverage/
+infra/docker/nginx/certs/
+summary.html
+scripts/debug/out*.txt
+scripts/debug/*.png

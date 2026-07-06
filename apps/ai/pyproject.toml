@@ -1,0 +1,25 @@
+[project]
+name = "boilerplate-knowledge-ai"
+version = "0.1.0"
+description = "Tenant-scoped LangGraph knowledge bot service for the boilerplate app."
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.30.0",
+  "pydantic>=2.8.0",
+  "langchain-core>=0.3.0",
+  "langchain-ollama>=0.2.0",
+  "langgraph>=0.2.0",
+  "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "ruff>=0.6.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

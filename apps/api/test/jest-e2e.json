@@ -1,0 +1,19 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "setupFiles": ["<rootDir>/setup-env.ts"],
+  "testTimeout": 30000,
+  "maxWorkers": 1,
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@boilerplate/(.*)$": "<rootDir>/../../../packages/$1/src",
+    "^nestlens$": "<rootDir>/mocks/nestlens.mock.ts"
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!.*\\.mjs$)"
+  ]
+}

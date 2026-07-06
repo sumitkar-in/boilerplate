@@ -1,0 +1,10 @@
+-- Initial migration for the "notes" module.
+-- Applied to every tenant schema that has this feature enabled.
+-- Add this module's tables here, e.g.:
+--
+-- CREATE TABLE IF NOT EXISTS notes_items (
+--   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+--   created_at  timestamptz NOT NULL DEFAULT now()
+-- );
+--
+-- See: skills/migrations/SKILL.md

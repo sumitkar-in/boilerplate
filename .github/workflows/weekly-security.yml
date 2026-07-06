@@ -1,0 +1,213 @@
+name: Weekly SBOM and CVE Reports
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+concurrency:
+  group: weekly-security-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: Sonar scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve Sonar configuration
+        id: sonar-config
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "Sonar scan skipped: SONAR_TOKEN secret is not configured."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$SONAR_PROJECT_KEY" ]; then
+            echo "Sonar scan skipped: SONAR_PROJECT_KEY repository variable is not configured."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Setup pnpm
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build TypeScript projects
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: pnpm --filter @boilerplate/contracts build && pnpm --filter api build && pnpm --filter web build
+
+      - name: SonarQube Cloud scan
+        if: steps.sonar-config.outputs.enabled == 'true' && env.SONAR_ORGANIZATION != ''
+        uses: SonarSource/sonarqube-scan-action@v8
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+            -Dsonar.organization=${{ env.SONAR_ORGANIZATION }}
+
+      - name: SonarQube Server scan
+        if: steps.sonar-config.outputs.enabled == 'true' && env.SONAR_ORGANIZATION == ''
+        uses: SonarSource/sonarqube-scan-action@v8
+        with:
+          args: >
+            -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
+
+  trivy:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare report directory
+        run: mkdir -p security-reports
+
+      - name: Generate vulnerability JSON
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: json
+          output: security-reports/trivy-vulnerabilities.json
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Generate vulnerability summary
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          output: security-reports/trivy-summary.txt
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Generate CycloneDX SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: cyclonedx
+          output: security-reports/sbom.cdx.json
+          exit-code: '0'
+
+      - name: Generate SARIF for GitHub code scanning
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: security-reports/trivy-results.sarif
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Build API image
+        run: docker build -f apps/api/Dockerfile -t boilerplate-api:security-scan .
+
+      - name: Build Nginx frontend image
+        run: docker build -f infra/docker/nginx/Dockerfile -t boilerplate-nginx:security-scan .
+
+      - name: Build AI image
+        run: docker build -f apps/ai/Dockerfile -t boilerplate-ai:security-scan .
+
+      - name: Scan API image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boilerplate-api:security-scan
+          format: json
+          output: security-reports/trivy-api-image-vulnerabilities.json
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Generate API image SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boilerplate-api:security-scan
+          format: cyclonedx
+          output: security-reports/sbom-api-image.cdx.json
+          exit-code: '0'
+
+      - name: Scan Nginx image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boilerplate-nginx:security-scan
+          format: json
+          output: security-reports/trivy-nginx-image-vulnerabilities.json
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Generate Nginx image SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boilerplate-nginx:security-scan
+          format: cyclonedx
+          output: security-reports/sbom-nginx-image.cdx.json
+          exit-code: '0'
+
+      - name: Scan AI image vulnerabilities
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boilerplate-ai:security-scan
+          format: json
+          output: security-reports/trivy-ai-image-vulnerabilities.json
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Generate AI image SBOM
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: boilerplate-ai:security-scan
+          format: cyclonedx
+          output: security-reports/sbom-ai-image.cdx.json
+          exit-code: '0'
+
+      - name: Upload SARIF
+        if: always()
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: security-reports/trivy-results.sarif
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-security-reports
+          path: security-reports/
+          retention-days: 30

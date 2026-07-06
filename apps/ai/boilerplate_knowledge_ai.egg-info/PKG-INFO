@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: boilerplate-knowledge-ai
+Version: 0.1.0
+Summary: Tenant-scoped LangGraph knowledge bot service for the boilerplate app.
+Requires-Python: >=3.11
+Requires-Dist: fastapi>=0.115.0
+Requires-Dist: uvicorn[standard]>=0.30.0
+Requires-Dist: pydantic>=2.8.0
+Requires-Dist: langchain-core>=0.3.0
+Requires-Dist: langchain-ollama>=0.2.0
+Requires-Dist: langgraph>=0.2.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0.0; extra == "dev"
+Requires-Dist: ruff>=0.6.0; extra == "dev"

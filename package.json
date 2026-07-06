@@ -1,0 +1,84 @@
+{
+  "name": "boilerplate",
+  "license": "AGPL-3.0-or-later",
+  "bin": {
+    "boilerplate": "scripts/create-boilerplate.js",
+    "create-boilerplate": "scripts/create-boilerplate.js",
+    "boilerplate-rename": "scripts/rename-project.js"
+  },
+  "files": [
+    ".dockerignore",
+    ".env.example",
+    ".github",
+    ".gitignore",
+    "apps",
+    "docs",
+    "drizzle",
+    "infra",
+    "packages",
+    "scripts",
+    "skills",
+    "tests",
+    "setup.sh",
+    "skills-lock.json",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "tsconfig.base.json"
+  ],
+  "version": "0.0.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "pnpm --filter @boilerplate/contracts build && pnpm --filter api build && pnpm --filter web build",
+    "lint": "pnpm --filter api lint && pnpm --filter web lint",
+    "lint:fix": "pnpm --filter api lint:fix && pnpm --filter web lint:fix",
+    "release:version": "node scripts/release-version.js",
+    "release:check": "pnpm lint && pnpm build && pnpm --filter api test",
+    "rename:project": "node scripts/rename-project.js",
+    "create:local": "node scripts/create-boilerplate.js",
+    "predocker:up": "bash scripts/generate-dev-certs.sh",
+    "docker:up": "docker compose -f infra/docker/docker-compose.yml --env-file .env up -d --build",
+    "docker:down": "docker compose -f infra/docker/docker-compose.yml --env-file .env down",
+    "dev:api": "pnpm --filter api start:dev",
+    "dev:worker": "pnpm --filter api start:worker:dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "db:clean": "docker compose -f infra/docker/docker-compose.yml --env-file .env run --rm --no-deps api node scripts/database/clean-database.js",
+    "db:fresh": "pnpm db:clean && pnpm migrate:core && pnpm migrate:tenants && pnpm seed:super-admin",
+    "migrate:core": "docker compose -f infra/docker/docker-compose.yml --env-file .env run --rm --no-deps api node scripts/database/migrate-core.js",
+    "migrate:tenants": "docker compose -f infra/docker/docker-compose.yml --env-file .env run --rm --no-deps api node scripts/database/migrate-tenants.js",
+    "migrate:module": "docker compose -f infra/docker/docker-compose.yml --env-file .env run --rm --no-deps api node scripts/database/migrate-module.js",
+    "tenant:create": "docker compose -f infra/docker/docker-compose.yml --env-file .env run --rm --no-deps api node scripts/database/create-tenant.js",
+    "seed:super-admin": "docker compose -f infra/docker/docker-compose.yml --env-file .env run --rm --no-deps api node scripts/database/seed-super-admin.js",
+    "seed:bpql": "pnpm dlx tsx scripts/seed-bpql-dummy.ts",
+    "generate:module": "node scripts/generators/generate-module.js",
+    "generate:entity": "node scripts/generators/generate-entity.js",
+    "generate:crud": "node scripts/generators/generate-crud.js",
+    "generate:cron-job": "node scripts/generators/generate-cron-job.js",
+    "generate:frontend-module": "node scripts/generators/generate-frontend-module.js",
+    "prepare": "husky && pnpm --filter @boilerplate/contracts build"
+  },
+  "devDependencies": {
+    "dotenv": "^16.6.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "pg": "^8.22.0"
+  },
+  "lint-staged": {
+    "apps/api/**/*.ts": [
+      "pnpm --filter api exec eslint --fix"
+    ],
+    "apps/web/**/*.{ts,tsx}": [
+      "pnpm --filter web exec eslint --fix"
+    ],
+    "packages/**/*.{ts,tsx}": [
+      "./apps/web/node_modules/.bin/eslint --fix --config eslint.config.mjs"
+    ]
+  }
+}

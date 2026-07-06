@@ -1,0 +1,323 @@
+{
+  "repo_notes": [
+    {
+      "content": ""
+    }
+  ],
+  "pages": [
+    {
+      "title": "Overview",
+      "purpose": "High-level introduction to the multi-tenant modular boilerplate: what it is, its key architectural pillars (schema-per-tenant, modular features, monorepo), the tech stack (NestJS API, React + Vite web, React Native / Expo mobile, pnpm monorepo), CI/security badges, and how to navigate the wiki. Links to child pages for setup, project creation, and developer tooling.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Getting Started & Local Setup",
+      "purpose": "Step-by-step guide for scaffolding a new project from the template via `npx github:sumitkar-in/boilerplate <project-name>` (with `--display-name`, `--branch`, `--skip-git` flags), renaming an existing checkout in-place with `pnpm rename:project` / `node scripts/rename-project.js`, configuring environment variables, starting Docker infrastructure, running migrations (`pnpm db:fresh`), and launching development servers (`dev:api`, `dev:worker`, `dev:web`, `dev:mobile`). Covers the `setup.sh`, `create-boilerplate.js`, and `rename-project.js` scripts, and the default super-admin/tenant login URLs.",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Developer Tooling: Generators, Pre-commit Hooks & Releases",
+      "purpose": "Covers the day-to-day developer workflow tooling described in the README: the code generators (`generate:module`, `generate:entity`, `generate:crud`, `generate:frontend-module`) and the architectural conventions they enforce (see `skills/`); the Husky pre-commit gates (`lint-staged` ESLint fix, the 200+ API unit test suite, and `pnpm audit --audit-level=high`); and the release process (`pnpm release:check`, `pnpm release:version <bump> [--dry-run]`, and refreshing the lockfile with `pnpm install --lockfile-only` after renames or releases).",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Monorepo Structure & Workspace Configuration",
+      "purpose": "Explains the pnpm monorepo layout: `apps/api`, `apps/web`, `apps/mobile`, `apps/ai`, `packages/contracts`, `packages/ui-common`, `scripts/`, `skills/`, and `tests/`. Covers TypeScript project references, ESLint configs, and the `packages/contracts` shared type layer.",
+      "parent": "Overview",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Architecture",
+      "purpose": "Overview of the foundational backend architecture: NestJS application bootstrap, multi-tenancy strategy, database layer, caching, and the request lifecycle. Links to child pages covering each subsystem in depth.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Multi-Tenancy: Schema-per-Tenant Strategy",
+      "purpose": "Deep dive into the schema-per-tenant isolation model: how tenant schemas are created and named, the `TenantContext` (AsyncLocalStorage), `TenantResolverMiddleware`, `TenantDbService` (`withTenantDb`), and the `@CurrentTenant()` decorator. Covers the core schema tables (tenants, users, memberships, feature_flags, audit_logs).",
+      "parent": "Core Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Tenant Provisioning & Migration Pipeline",
+      "purpose": "Explains how new tenants are created (CLI via `create-tenant.js` and API via `TenantProvisioningService`), the multi-schema migration runner, core vs. tenant vs. module migrations, and the `applyPendingMigrations` tracking mechanism. Covers `migrate-core.js`, `migrate-tenants.js`, and `migrate-module.js`.",
+      "parent": "Core Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Authentication & Security",
+      "purpose": "Covers the full auth lifecycle: JWT dual-token strategy (access + refresh), TOTP-based 2FA (setup/enable/disable), impersonation sessions, platform vs. tenant sessions, and the guard hierarchy (JwtAuthGuard, RolesGuard, PermissionsGuard, SuperAdminGuard). Includes security headers and rate limiting.",
+      "parent": "Core Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Feature Flags System",
+      "purpose": "Explains the per-tenant feature flag architecture: `FeatureFlagsService` (DB → Redis → context lookup pipeline), `@RequireFeature()` decorator, `FeatureFlagGuard`, `useFeatureFlag` React hook, and the `feature.json` manifest in each module. Covers how enabling a feature triggers schema migrations.",
+      "parent": "Core Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Database Layer & Caching",
+      "purpose": "Covers the PostgreSQL setup with Drizzle ORM, the `DatabaseModule` and `TenantDbService`, the `CacheService` (Redis-backed `remember` pattern), cache key namespacing, and invalidation strategies. Includes the `PostgresExceptionFilter` for constraint error mapping.",
+      "parent": "Core Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "RBAC: Roles & Permissions",
+      "purpose": "Details the Role-Based Access Control system: default system roles (owner, admin, member, viewer), role rank, permission strings catalog, `TenantRolesService`, `seedDefaultRoles`, custom role creation, and the `tenant_memberships` table. Covers the `packages/contracts/src/rbac.ts` permission catalog.",
+      "parent": "Core Architecture",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Backend API (NestJS)",
+      "purpose": "Overview of the NestJS API application: module composition, global interceptors, Swagger/OpenAPI docs, observability, and the worker process. Links to child pages for core infrastructure modules and domain feature modules.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Core Infrastructure Modules",
+      "purpose": "Covers the shared backend infrastructure: `DatabaseModule`, `RedisModule`, `StorageModule` (S3/MinIO), `LoggingModule` (Loki), `MetricsModule` (Prometheus), `SchedulingModule` (TenantSweepService), `AuditLogService`, and the `NotificationsModule` (BullMQ). Explains the worker process (`worker.module.ts`) for background jobs.",
+      "parent": "Backend API (NestJS)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Observability Stack",
+      "purpose": "Documents the local Grafana + Prometheus + Loki observability stack: enabling it via the `COMPOSE_PROFILES=observability,api,minio` and `OBSERVABILITY_ENABLED=true` env vars, starting it with `pnpm docker:up`, and accessing Grafana at `https://localhost/grafana`. Connects the Docker Compose profile setup to the `LoggingModule` (Loki) and `MetricsModule` (Prometheus) covered in Core Infrastructure Modules.",
+      "parent": "Backend API (NestJS)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Tenant & Admin Controllers",
+      "purpose": "Documents the `TenantsController` (member management, branding, menu order), `AdminTenantsController` (super-admin provisioning, feature toggling, impersonation), and `AuthController` (login, 2FA, token refresh). Covers the `TenantProvisioningService` API path.",
+      "parent": "Backend API (NestJS)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Domain Feature Modules",
+      "purpose": "Overview of all pluggable domain modules registered in `AppModule`: Employees, Departments, Tasks, Documents, Notes, Calendar, BPQL, Knowledge Bot, and Notifications. Explains the shared module shape (controller, service, entities, migrations, feature.json) and cross-module communication rules.",
+      "parent": "Backend API (NestJS)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Web Frontend (React + Vite)",
+      "purpose": "Overview of the `apps/web` React application: app entry point, routing, the AppShell layout, dynamic module loading, and the global design system. Links to child pages for layout/navigation, settings, and individual feature module UIs.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "App Shell, Layout & Navigation",
+      "purpose": "Covers `AppShell.tsx`, `AppSidebar.tsx`, `AppTopbar.tsx`, `SuperAdminShell.tsx`, the dynamic `buildCustomMenu` pipeline, `MenuOrderPage`, route guards (`ProtectedRoute`, `RequireRole`, `RequireSuperAdmin`), and `AppRoutes.tsx`. Explains how navigation items are built from enabled feature modules.",
+      "parent": "Web Frontend (React + Vite)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Global Design System & UI Component Library",
+      "purpose": "Documents the CSS variable-driven design system in `index.css` (light/dark themes, semantic tokens), the `packages/ui-common` shared component library (AdvancedDataTable, Modal, ConfirmDialog, Drawer, Toast, Button, FormControls), and the i18n locale system.",
+      "parent": "Web Frontend (React + Vite)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Tenant Settings & Admin Pages",
+      "purpose": "Covers the tenant settings UI: `TenantSettingsLayout`, `GeneralSection`, `NavigationSection`, `DataSection`, `DashboardSection`, `NotificationsSection`, `AccessPolicySection`, `IntegrationsSection`, `MembersSettingsPage`, `RolesSettingsPage`, and the super-admin `AdminTenantsPage`/`AdminTenantPage`.",
+      "parent": "Web Frontend (React + Vite)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Frontend Module System & Dynamic Loading",
+      "purpose": "Explains how feature modules are lazy-loaded via `module-loader.ts`, the `ModuleConfig` contract, `useModuleRoutes`, route templates, and the `generate-frontend-module.js` generator. Covers the `module.config.ts` pattern and how modules register their nav items.",
+      "parent": "Web Frontend (React + Vite)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Feature Modules In Depth",
+      "purpose": "Overview of all domain feature modules available in the boilerplate, with links to child pages covering each module's data model, API, and UI. Each module follows the same shape but has unique business logic.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Tasks Module",
+      "purpose": "Full coverage of the task management module: `task_projects`, `tasks`, `task_sprints`, `task_custom_fields`, `task_comments`, `task_activity` entities and migrations; `TasksService` and `TasksController`; the web UI (`TasksPage`, `TaskDetailPage`, `TaskModal`, `ProjectSettingsModal`); Kanban/List/Sprint view modes; and K6 load tests.",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Employees & Departments Modules",
+      "purpose": "Covers the Employees module (entity schema, custom fields, manager history, CSV import/export via BullMQ, `EmployeePage`, `EmployeeFormModal`, `useEmployeesData`, `AdvancedDataTable` integration) and the Departments module (entity, service, controller, web UI). Includes K6 load tests.",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Documents Module",
+      "purpose": "Covers the Documents module: `docSpace`, `documentPage`, `documentRevision`, `documentComment` entities; `DocumentsService` and `DocumentsController`; the web UI (`DocumentsPage`, `DocumentsSidebar`, `DocumentEditor` with Markdown and Quill rich-text support, `DocumentReader`); and K6 load tests.",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Notes Module",
+      "purpose": "Covers the Notes module: `note` entity and migrations, `NotesService` and `NotesController`, the Keep-style web UI (`NotesPage`, `NoteCard`, `NoteComposer`, `NoteSection`), the mobile `NotesScreen`, the `notes-sweep` cron job (BullMQ repeatable job pattern), and K6 load tests.",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Calendar Module",
+      "purpose": "Covers the Calendar module: `calendar_event` and `calendar_attendee` entities, `CalendarService` and `CalendarController`, the web UI (`CalendarPage`, `CalendarMonthView`, `CalendarList`, `calendarDates` utilities), and E2E tests.",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "BPQL (Boilerplate Query Language) Module",
+      "purpose": "Deep dive into the BPQL custom data engine: `bpql_table`, `bpql_row`, `bpql_saved_query`, `bpql_chart` entities; `BpqlService` query execution pipeline (JSONB field access, safe numeric casting, aggregation); the web UI (`BpqlPage`, `BpqlDataTable`, `TableModal`, `RowModal`, `BpqlChartsPanel`); and the BPQL API surface.",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Knowledge Bot Module",
+      "purpose": "Covers the AI-powered Knowledge Bot: the Python `apps/ai` service (LangGraph + Ollama, `/v1/chat` and `/v1/chat/stream` endpoints), `knowledge-bot` NestJS module (proxy, `KnowledgeBotService`), entities (`knowledge_source`, `knowledge_skill`, `knowledge_chat_message`), and the web UI (`KnowledgeBotPage`, `KnowledgeChatPanel`, `KnowledgeSourcesPanel`, `KnowledgeSkillsPanel`).",
+      "parent": "Feature Modules In Depth",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Mobile Application (React Native / Expo)",
+      "purpose": "Overview of the `apps/mobile` Expo application: `App.tsx` entry point, `AppNavigator`, `TenantProvider`, `api-client` (AsyncStorage token management), and the mobile module system. Covers the Notes and Employees mobile screens and the mobile module-loader pattern.",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Mobile Navigation & Screen Architecture",
+      "purpose": "Details the React Navigation setup in `AppNavigator.tsx`, the `LoginScreen`, module-based navigation files (e.g., `notes/navigation.tsx`, `employees/navigation.tsx`), and how the mobile module-loader gates screens by feature flag.",
+      "parent": "Mobile Application (React Native / Expo)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    },
+    {
+      "title": "Mobile API Client & Session Management",
+      "purpose": "Explains the mobile `api-client.ts`: AsyncStorage-backed token persistence, in-memory cache for synchronous access, the 401 refresh-and-retry interceptor, and the `platformSessionBackup` for impersonation. Contrasts with the web client's localStorage approach.",
+      "parent": "Mobile Application (React Native / Expo)",
+      "page_notes": [
+        {
+          "content": ""
+        }
+      ]
+    }
+  ]
+}
