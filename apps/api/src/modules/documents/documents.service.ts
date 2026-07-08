@@ -326,13 +326,14 @@ export class DocumentsService {
     ttlSeconds: number,
     loader: () => Promise<T>,
   ): Promise<T> {
-    const cached = this.cache?.remember(
+    if (!this.cache) {
+      return await loader();
+    }
+    return await this.cache.remember(
       this.cacheKey(tenant, key),
       ttlSeconds,
       loader,
     );
-    if (cached) return await cached;
-    return await loader();
   }
 
   private async invalidateSpaces(tenant: TenantContext): Promise<void> {

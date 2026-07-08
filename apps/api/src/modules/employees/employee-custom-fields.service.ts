@@ -114,9 +114,10 @@ export class EmployeeCustomFieldsService {
     loader: () => Promise<T>,
   ): Promise<T> {
     const cacheKey = `tenant:${tenant.tenantId}:${key}`;
-    const cached = this.cache?.remember(cacheKey, ttlSeconds, loader);
-    if (cached) return await cached;
-    return await loader();
+    if (!this.cache) {
+      return await loader();
+    }
+    return await this.cache.remember(cacheKey, ttlSeconds, loader);
   }
 
   private async invalidateCustomFields(tenant: TenantContext): Promise<void> {

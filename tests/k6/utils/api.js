@@ -1,5 +1,4 @@
 import http from 'k6/http';
-import { check } from 'k6';
 import { config } from './config.js';
 
 export function makeRequest(method, endpoint, payload = null, headers = {}) {

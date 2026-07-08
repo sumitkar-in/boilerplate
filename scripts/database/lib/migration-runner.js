@@ -72,9 +72,8 @@ async function getAppliedMigrations(client, schemaName) {
 function listMigrationFiles(dir) {
   const migrationDir = resolveMigrationDir(dir);
   if (!migrationDir) return [];
-  // lgtm[js/path-injection] migrationDir is resolved through ALLOWED_MIGRATION_ROOTS and realpath-checked.
   return fs
-    .readdirSync(migrationDir)
+    .readdirSync(migrationDir) // lgtm[js/path-injection] migrationDir is resolved through ALLOWED_MIGRATION_ROOTS and realpath-checked.
     .filter((f) => SAFE_MIGRATION_FILE.test(f) && path.basename(f) === f)
     .sort();
 }
@@ -86,8 +85,7 @@ function resolveMigrationDir(dir) {
   }
   let realDir;
   try {
-    // lgtm[js/path-injection] resolvedDir must be under ALLOWED_MIGRATION_ROOTS before filesystem access.
-    realDir = fs.realpathSync(resolvedDir);
+    realDir = fs.realpathSync(resolvedDir); // lgtm[js/path-injection] resolvedDir must be under ALLOWED_MIGRATION_ROOTS before filesystem access.
   } catch (err) {
     if (err && err.code === 'ENOENT') {
       return null;

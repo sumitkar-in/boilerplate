@@ -82,8 +82,7 @@ async function getAppliedMigrations(
 function listMigrationFiles(dir: string): string[] {
   const migrationDir = resolveMigrationDir(dir);
   if (!migrationDir) return [];
-  // lgtm[js/path-injection] migrationDir is resolved through ALLOWED_MIGRATION_ROOTS and realpath-checked.
-  return readdirSync(migrationDir)
+  return readdirSync(migrationDir) // lgtm[js/path-injection] migrationDir is resolved through ALLOWED_MIGRATION_ROOTS and realpath-checked.
     .filter((f) => SAFE_MIGRATION_FILE.test(f) && basename(f) === f)
     .sort();
 }
@@ -95,8 +94,7 @@ function resolveMigrationDir(dir: string): string | null {
   }
   let realDir: string;
   try {
-    // lgtm[js/path-injection] resolvedDir must be under ALLOWED_MIGRATION_ROOTS before filesystem access.
-    realDir = realpathSync(resolvedDir);
+    realDir = realpathSync(resolvedDir); // lgtm[js/path-injection] resolvedDir must be under ALLOWED_MIGRATION_ROOTS before filesystem access.
   } catch (err) {
     if (isNodeErrorCode(err, 'ENOENT')) {
       return null;

@@ -137,9 +137,10 @@ export class TenantRolesService {
     ttlSeconds: number,
     loader: () => Promise<T>,
   ): Promise<T> {
-    const cached = this.cache?.remember(key, ttlSeconds, loader);
-    if (cached) return await cached;
-    return await loader();
+    if (!this.cache) {
+      return await loader();
+    }
+    return await this.cache.remember(key, ttlSeconds, loader);
   }
 
   private async invalidateTenant(tenantId: string): Promise<void> {
