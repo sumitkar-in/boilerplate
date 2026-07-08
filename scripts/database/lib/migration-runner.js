@@ -9,11 +9,19 @@ const path = require('path');
 
 const SAFE_SCHEMA_NAME = /^[a-z0-9_]+$/;
 const SAFE_MIGRATION_FILE = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*\.sql$/;
-const ALLOWED_MIGRATION_ROOTS = [
-  path.resolve(process.cwd(), 'drizzle'),
-  path.resolve(process.cwd(), 'apps/api/src/modules'),
-  path.resolve(process.cwd(), 'apps/api/dist/modules'),
-];
+const ALLOWED_MIGRATION_ROOTS = Array.from(
+  new Set([
+    path.resolve(__dirname, '../../../drizzle'),
+    path.resolve(__dirname, '../../../apps/api/src/modules'),
+    path.resolve(__dirname, '../../../apps/api/dist/modules'),
+    path.resolve(process.cwd(), 'drizzle'),
+    path.resolve(process.cwd(), '../..', 'drizzle'),
+    path.resolve(process.cwd(), 'src/modules'),
+    path.resolve(process.cwd(), 'dist/modules'),
+    path.resolve(process.cwd(), 'apps/api/src/modules'),
+    path.resolve(process.cwd(), 'apps/api/dist/modules'),
+  ]),
+);
 
 function assertSafeSchemaName(schemaName) {
   if (!SAFE_SCHEMA_NAME.test(schemaName)) {
@@ -64,6 +72,7 @@ async function getAppliedMigrations(client, schemaName) {
 function listMigrationFiles(dir) {
   const migrationDir = resolveMigrationDir(dir);
   if (!migrationDir) return [];
+  // lgtm[js/path-injection] migrationDir is resolved through ALLOWED_MIGRATION_ROOTS and realpath-checked.
   return fs
     .readdirSync(migrationDir)
     .filter((f) => SAFE_MIGRATION_FILE.test(f) && path.basename(f) === f)
@@ -72,10 +81,19 @@ function listMigrationFiles(dir) {
 
 function resolveMigrationDir(dir) {
   const resolvedDir = path.resolve(dir);
-  if (!isAllowedMigrationDir(resolvedDir) || !fs.existsSync(resolvedDir)) {
+  if (!isAllowedMigrationDir(resolvedDir)) {
     return null;
   }
-  const realDir = fs.realpathSync(resolvedDir);
+  let realDir;
+  try {
+    // lgtm[js/path-injection] resolvedDir must be under ALLOWED_MIGRATION_ROOTS before filesystem access.
+    realDir = fs.realpathSync(resolvedDir);
+  } catch (err) {
+    if (err && err.code === 'ENOENT') {
+      return null;
+    }
+    throw err;
+  }
   if (!isAllowedMigrationDir(realDir)) {
     throw new Error(`Migration directory is outside allowed roots: ${dir}`);
   }

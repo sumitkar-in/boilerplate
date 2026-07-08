@@ -10,11 +10,19 @@ import type { PoolClient } from 'pg';
 
 const SAFE_SCHEMA_NAME = /^[a-z0-9_]+$/;
 const SAFE_MIGRATION_FILE = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*\.sql$/;
-const ALLOWED_MIGRATION_ROOTS = [
-  resolve(process.cwd(), 'drizzle'),
-  resolve(process.cwd(), 'apps/api/src/modules'),
-  resolve(process.cwd(), 'apps/api/dist/modules'),
-];
+const ALLOWED_MIGRATION_ROOTS = Array.from(
+  new Set([
+    resolve(__dirname, '../../modules'),
+    resolve(__dirname, '../../../../../drizzle'),
+    resolve(__dirname, '../../../drizzle'),
+    resolve(process.cwd(), 'drizzle'),
+    resolve(process.cwd(), '../..', 'drizzle'),
+    resolve(process.cwd(), 'src/modules'),
+    resolve(process.cwd(), 'dist/modules'),
+    resolve(process.cwd(), 'apps/api/src/modules'),
+    resolve(process.cwd(), 'apps/api/dist/modules'),
+  ]),
+);
 
 export function assertSafeSchemaName(schemaName: string): void {
   if (!SAFE_SCHEMA_NAME.test(schemaName)) {
