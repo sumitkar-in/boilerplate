@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "@boilerplate/contracts": "workspace:*",
-    "lucide-react": "^1.22.0"
+    "lucide-react": "^1.23.0"
   }
 }
