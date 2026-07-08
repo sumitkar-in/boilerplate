@@ -165,6 +165,26 @@ pnpm --filter api test:e2e  # run e2e tests
 pnpm audit --audit-level=high
 ```
 
+Commit messages are enforced separately via a **Husky `commit-msg` hook** running
+[commitlint](https://commitlint.js.org/) with the
+[Conventional Commits](https://www.conventionalcommits.org/) ruleset
+(`commitlint.config.js`):
+
+```
+<type>(<optional scope>): <short description>
+
+feat: add user avatar upload
+fix(auth): handle expired refresh token
+chore: bump eslint to v9
+```
+
+Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`.
+
+```bash
+# Check a message manually
+echo "feat: add commitlint enforcement" | pnpm exec commitlint
+```
+
 ---
 
 ## 🏗️ Code Generators

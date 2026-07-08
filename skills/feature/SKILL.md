@@ -39,5 +39,8 @@ You **MUST** follow these steps in order. Do not skip steps.
 - Add a new module document in `docs/modules/` describing the feature's architecture, endpoints, and extension points.
 - Update `docs/modules/index.md` if a new module was created.
 
-### 7. Final Summary
+### 7. Commit Changes
+- Follow `skills/commit-workflow/SKILL.md` to commit the feature once it's written and verified (Steps 3-5 passed).
+
+### 8. Final Summary
 - Create a `walkthrough.md` artifact (if in Planning Mode) or provide a detailed chat summary of the work completed, highlighting how the feature was implemented and any decisions made.

@@ -39,3 +39,6 @@ You **MUST** follow these steps in order. Do not skip steps.
 ### 6. Document Root Cause
 - Provide a summary to the user detailing the root cause of the bug, why it occurred, and how your patch resolves it.
 - If the bug requires a change to the `refactoring-plan.md` or general architectural documentation, update those files.
+
+### 7. Commit Changes
+- Follow `skills/commit-workflow/SKILL.md` to commit the fix once it's verified (Steps 4-5 passed). Use a `fix:` (or `fix(scope):`) Conventional Commits message.

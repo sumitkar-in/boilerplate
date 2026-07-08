@@ -11,6 +11,7 @@ import { createNote, listNotes, updateNote } from './scenarios/note.js';
 import { createSpace, listSpaces, createPage, listPages, updatePage } from './scenarios/document.js';
 import { listNotifications } from './scenarios/notification.js';
 import { createCustomField, listCustomFields, updateCustomField, createEmployee, listEmployees, updateEmployee } from './scenarios/employee.js';
+// generated scenario imports are appended below this line — see scripts/generators/generate-k6-scenario.js
 
 export const options = {
   scenarios: {
@@ -149,6 +150,8 @@ export default function (data) {
 
     // 8. Notifications
     listNotifications(tenantToken, tenantId);
+
+    // generated module scenario calls are inserted below this line — see scripts/generators/generate-k6-scenario.js
 
   } finally {
     // Delete tenant to clean up all schema data and avoid leaks

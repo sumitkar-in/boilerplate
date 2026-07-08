@@ -62,9 +62,13 @@
     "generate:crud": "node scripts/generators/generate-crud.js",
     "generate:cron-job": "node scripts/generators/generate-cron-job.js",
     "generate:frontend-module": "node scripts/generators/generate-frontend-module.js",
+    "generate:k6-scenario": "node scripts/generators/generate-k6-scenario.js",
+    "generate:grafana-dashboard": "node scripts/generators/generate-grafana-dashboard.js",
     "prepare": "husky && pnpm --filter @boilerplate/contracts build"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.0",
+    "@commitlint/config-conventional": "^21.2.0",
     "dotenv": "^17.4.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
