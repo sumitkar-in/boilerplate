@@ -367,29 +367,29 @@ export class CalendarService {
     await this.tenantDb.withTenantDb(tenant, async (db) => {
       for (const vevent of vevents) {
         const startAt = parseIcsDate(
-          vevent['DTSTART'] ?? vevent['DTSTART;VALUE=DATE'],
+          vevent.get('DTSTART') ?? vevent.get('DTSTART;VALUE=DATE'),
         );
         const endAt = parseIcsDate(
-          vevent['DTEND'] ?? vevent['DTEND;VALUE=DATE'],
+          vevent.get('DTEND') ?? vevent.get('DTEND;VALUE=DATE'),
         );
         if (!startAt || !endAt) continue;
-        const allDay = !!vevent['DTSTART;VALUE=DATE'];
+        const allDay = vevent.has('DTSTART;VALUE=DATE');
         await db
           .insert(calendarEvent)
           .values({
             ownerUserId: tenant.userId,
-            title: vevent['SUMMARY'] ?? 'Imported event',
-            description: vevent['DESCRIPTION'] ?? '',
+            title: vevent.get('SUMMARY') ?? 'Imported event',
+            description: vevent.get('DESCRIPTION') ?? '',
             type: 'event' as const,
             status: 'confirmed' as const,
             visibility: 'private' as const,
             startAt,
             endAt,
             allDay,
-            location: vevent['LOCATION'] ?? '',
-            meetingLink: vevent['URL'] ?? '',
-            rrule: vevent['RRULE'],
-            icsUid: vevent['UID'] ?? `${randomUUID()}@boilerplate`,
+            location: vevent.get('LOCATION') ?? '',
+            meetingLink: vevent.get('URL') ?? '',
+            rrule: vevent.get('RRULE'),
+            icsUid: vevent.get('UID') ?? `${randomUUID()}@boilerplate`,
             color: undefined,
           })
           .onConflictDoNothing();
@@ -434,17 +434,22 @@ function toIcsDateOnly(d: Date): string {
 }
 
 function foldIcsValue(value: string): string {
-  return value.replace(/\n/g, '\\n').replace(/,/g, '\\,');
+  return value
+    .replaceAll('\\', '\\\\')
+    .replaceAll('\r\n', '\\n')
+    .replaceAll('\n', '\\n')
+    .replaceAll(',', '\\,')
+    .replaceAll(';', '\\;');
 }
 
 /** Very lightweight ICS VEVENT parser (not a full RFC 5545 parser) */
-function parseVEvents(ics: string): Record<string, string>[] {
-  const events: Record<string, string>[] = [];
-  let current: Record<string, string> | null = null;
+function parseVEvents(ics: string): Array<Map<string, string>> {
+  const events: Array<Map<string, string>> = [];
+  let current: Map<string, string> | null = null;
   for (const rawLine of ics.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (line === 'BEGIN:VEVENT') {
-      current = {};
+      current = new Map<string, string>();
     } else if (line === 'END:VEVENT') {
       if (current) events.push(current);
       current = null;
@@ -452,16 +457,32 @@ function parseVEvents(ics: string): Record<string, string>[] {
       const colonIdx = line.indexOf(':');
       if (colonIdx !== -1) {
         const key = line.slice(0, colonIdx).toUpperCase();
+        if (!ALLOWED_ICS_EVENT_KEYS.has(key)) continue;
         const value = line
           .slice(colonIdx + 1)
-          .replace(/\\n/g, '\n')
-          .replace(/\\,/g, ',');
-        current[key] = value;
+          .replaceAll('\\n', '\n')
+          .replaceAll('\\,', ',')
+          .replaceAll('\\;', ';')
+          .replaceAll('\\\\', '\\');
+        current.set(key, value);
       }
     }
   }
   return events;
 }
+
+const ALLOWED_ICS_EVENT_KEYS = new Set([
+  'UID',
+  'DTSTART',
+  'DTSTART;VALUE=DATE',
+  'DTEND',
+  'DTEND;VALUE=DATE',
+  'SUMMARY',
+  'DESCRIPTION',
+  'LOCATION',
+  'URL',
+  'RRULE',
+]);
 
 function parseIcsDate(val: string | undefined): Date | null {
   if (!val) return null;

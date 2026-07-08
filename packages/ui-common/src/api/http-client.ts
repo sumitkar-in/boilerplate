@@ -205,7 +205,7 @@ export function createHttpClient(options: {
 
 /** Normalizes a configured API base URL to always end in `/api/v1`. */
 export function normalizeApiUrl(value: string | undefined, fallback: string): string {
-  const trimmed = (value?.trim() || fallback).replace(/\/+$/, '');
+  const trimmed = trimTrailingSlashes(value?.trim() || fallback);
   if (!trimmed || trimmed === '/') return fallback;
   if (trimmed.endsWith('/api/v1')) return trimmed;
   if (trimmed.endsWith('/api')) return `${trimmed}/v1`;
@@ -213,4 +213,12 @@ export function normalizeApiUrl(value: string | undefined, fallback: string): st
   // .env example) always needs the API path appended — it never means
   // "already correct as-is".
   return `${trimmed}/api/v1`;
+}
+
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47) {
+    end -= 1;
+  }
+  return value.slice(0, end);
 }

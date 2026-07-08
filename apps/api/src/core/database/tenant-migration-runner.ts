@@ -1,5 +1,5 @@
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { readdirSync, readFileSync, existsSync, realpathSync } from 'node:fs';
+import { basename, dirname, resolve, sep } from 'node:path';
 import type { PoolClient } from 'pg';
 
 // Runtime (HTTP-triggered) counterpart to scripts/database/lib/
@@ -9,6 +9,12 @@ import type { PoolClient } from 'pg';
 // see skills/migrations/SKILL.md.
 
 const SAFE_SCHEMA_NAME = /^[a-z0-9_]+$/;
+const SAFE_MIGRATION_FILE = /^[a-zA-Z0-9][a-zA-Z0-9_.-]*\.sql$/;
+const ALLOWED_MIGRATION_ROOTS = [
+  resolve(process.cwd(), 'drizzle'),
+  resolve(process.cwd(), 'apps/api/src/modules'),
+  resolve(process.cwd(), 'apps/api/dist/modules'),
+];
 
 export function assertSafeSchemaName(schemaName: string): void {
   if (!SAFE_SCHEMA_NAME.test(schemaName)) {
@@ -66,10 +72,29 @@ async function getAppliedMigrations(
 }
 
 function listMigrationFiles(dir: string): string[] {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((f) => f.endsWith('.sql'))
+  const migrationDir = resolveMigrationDir(dir);
+  if (!migrationDir) return [];
+  return readdirSync(migrationDir)
+    .filter((f) => SAFE_MIGRATION_FILE.test(f) && basename(f) === f)
     .sort();
+}
+
+function resolveMigrationDir(dir: string): string | null {
+  const resolvedDir = resolve(dir);
+  if (!isAllowedMigrationDir(resolvedDir) || !existsSync(resolvedDir)) {
+    return null;
+  }
+  const realDir = realpathSync(resolvedDir);
+  if (!isAllowedMigrationDir(realDir)) {
+    throw new Error(`Migration directory is outside allowed roots: ${dir}`);
+  }
+  return realDir;
+}
+
+function isAllowedMigrationDir(dir: string): boolean {
+  return ALLOWED_MIGRATION_ROOTS.some(
+    (root) => dir === root || dir.startsWith(`${root}${sep}`),
+  );
 }
 
 async function applyMigrationFile(
@@ -80,7 +105,18 @@ async function applyMigrationFile(
   migrationName: string,
 ): Promise<void> {
   assertSafeSchemaName(schemaName);
-  const sql = readFileSync(join(dir, filename), 'utf8');
+  if (!SAFE_MIGRATION_FILE.test(filename) || basename(filename) !== filename) {
+    throw new Error(`Unsafe migration filename: "${filename}"`);
+  }
+  const migrationDir = resolveMigrationDir(dir);
+  if (!migrationDir) {
+    throw new Error(`Migration directory not found or not allowed: ${dir}`);
+  }
+  const migrationPath = resolve(migrationDir, filename);
+  if (!migrationPath.startsWith(`${migrationDir}${sep}`)) {
+    throw new Error(`Migration path escapes its directory: ${filename}`);
+  }
+  const sql = readFileSync(migrationPath, 'utf8');
   await client.query('BEGIN');
   try {
     await client.query(`SET search_path TO "${schemaName}", public`);

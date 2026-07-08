@@ -109,12 +109,15 @@ function main() {
 
 function registerModuleInAppModule(featureKey, FeatureName) {
   const appModulePath = path.join(ROOT, 'apps/api/src/app.module.ts');
-  if (!fs.existsSync(appModulePath)) {
+  let content;
+  try {
+    content = fs.readFileSync(appModulePath, 'utf8');
+  } catch (err) {
+    if (err && err.code !== 'ENOENT') throw err;
     warn(`apps/api/src/app.module.ts not found — skipping auto-registration. Wire ${FeatureName}Module in by hand.`);
     return;
   }
 
-  let content = fs.readFileSync(appModulePath, 'utf8');
   const importLine = `import { ${FeatureName}Module } from './modules/${featureKey}/${featureKey}.module';`;
 
   if (content.includes(importLine)) {

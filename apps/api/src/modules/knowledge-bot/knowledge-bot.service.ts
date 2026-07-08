@@ -399,12 +399,13 @@ export class KnowledgeBotService {
       'Cache-Control': 'no-cache, no-transform',
       Connection: 'keep-alive',
       'X-Accel-Buffering': 'no',
+      'X-Content-Type-Options': 'nosniff',
     });
     res.flushHeaders?.();
   }
 
   private writeSse(res: Response, chunk: AiChatStreamChunk): void {
-    res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+    res.write(formatSseJsonFrame(chunk));
   }
 
   private writeStreamError(
@@ -473,4 +474,14 @@ export class KnowledgeBotService {
       schemaName: tenant.schemaName,
     };
   }
+}
+
+function formatSseJsonFrame(chunk: AiChatStreamChunk): string {
+  const json = JSON.stringify(chunk)
+    .replaceAll('<', '\\u003c')
+    .replaceAll('>', '\\u003e')
+    .replaceAll('&', '\\u0026')
+    .replaceAll('\u2028', '\\u2028')
+    .replaceAll('\u2029', '\\u2029');
+  return `data: ${json}\n\n`;
 }

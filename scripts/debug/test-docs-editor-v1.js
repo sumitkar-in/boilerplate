@@ -1,10 +1,8 @@
 const { runTest, login } = require('./playwright-helper');
 
-runTest('test-docs-quill-v1', async (page) => {
-  
-    
-     => console.log('PAGEERROR:', err.message));
-  
+runTest('test-docs-editor-v1', async (page) => {
+    page.on('pageerror', (err) => console.log('PAGEERROR:', err.message));
+
     await login(page);
   
     await page.goto('http://localhost:5173/documents', { waitUntil: 'networkidle' });

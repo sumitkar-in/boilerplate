@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { eq, sql } from 'drizzle-orm';
 import { assertFound, listAndCount } from '../../core/common/crud/crud.helpers';
 import type { ListQueryConfig } from '../../core/common/query/list-query.builder';
@@ -87,8 +88,7 @@ export class EmployeesService {
         // Generate a random password for new users
         // Since this is auto-provisioned, they will likely use "Forgot Password" or SSO
         // For local auth, setting a default that is complex enough to pass validation
-        const defaultPassword =
-          'Auto' + Math.random().toString(36).substring(2, 10) + 'A1!';
+        const defaultPassword = `Auto${randomBytes(12).toString('base64url')}A1!`;
         user = await this.usersService.createWithPassword({
           email: dto.email,
           fullName: dto.name,

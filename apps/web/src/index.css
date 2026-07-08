@@ -6040,65 +6040,52 @@ input[type='checkbox'] {
   overflow: hidden;
 }
 
-.documents-rich-editor .ql-toolbar.ql-snow {
-  border: 0;
+.documents-rich-editor__toolbar {
+  display: flex;
+  gap: 6px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-soft);
   padding: 8px 10px;
 }
 
-.documents-rich-editor .ql-container.ql-snow {
-  flex: 1;
-  border: 0;
-  font-family: inherit;
-  font-size: 15px;
+.documents-rich-editor__toolbar button {
+  min-width: 34px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
 }
 
-.documents-rich-editor .ql-editor {
+.documents-rich-editor__toolbar button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.documents-rich-editor__input {
+  flex: 1;
   min-height: 260px;
   padding: 16px 20px 80px;
   color: var(--text);
+  font-size: 15px;
   line-height: 1.7;
+  outline: 0;
+  overflow-y: auto;
 }
 
-.documents-rich-editor .ql-editor.ql-blank::before {
-  left: 20px;
-  color: var(--text-muted);
-  font-style: normal;
-}
-
-.documents-rich-editor .ql-snow .ql-stroke {
-  stroke: var(--text-muted);
-}
-
-.documents-rich-editor .ql-snow .ql-fill {
-  fill: var(--text-muted);
-}
-
-.documents-rich-editor .ql-snow .ql-picker {
+.documents-rich-editor__input:empty::before {
+  content: attr(data-placeholder);
   color: var(--text-muted);
 }
 
-.documents-rich-editor .ql-snow .ql-picker-options {
-  border-color: var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow);
-}
-
-.documents-rich-editor .ql-toolbar.ql-snow button:hover .ql-stroke,
-.documents-rich-editor .ql-toolbar.ql-snow button.ql-active .ql-stroke,
-.documents-rich-editor .ql-snow .ql-picker-label:hover .ql-stroke {
-  stroke: var(--accent);
-}
-
-.documents-rich-editor .ql-toolbar.ql-snow button:hover .ql-fill,
-.documents-rich-editor .ql-toolbar.ql-snow button.ql-active .ql-fill {
-  fill: var(--accent);
-}
-
-.documents-rich-editor .ql-toolbar.ql-snow button:hover,
-.documents-rich-editor .ql-toolbar.ql-snow button.ql-active {
-  color: var(--accent);
+.documents-rich-editor__input blockquote {
+  margin: 0 0 1rem;
+  padding-left: 12px;
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
 }
 
 .documents-panel {

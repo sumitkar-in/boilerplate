@@ -1,28 +1,24 @@
 import { useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import Quill from 'quill';
-import 'quill/dist/quill.snow.css';
 
-const TOOLBAR = [
-  [{ header: [1, 2, 3, false] }],
-  ['bold', 'italic', 'underline', 'strike'],
-  [{ list: 'ordered' }, { list: 'bullet' }],
-  ['blockquote', 'code-block', 'link'],
-  ['clean'],
-];
+const COMMANDS = [
+  { command: 'bold', label: 'B' },
+  { command: 'italic', label: 'I' },
+  { command: 'underline', label: 'U' },
+  { command: 'insertUnorderedList', label: 'List' },
+  { command: 'formatBlock', label: 'Quote', value: 'blockquote' },
+] as const;
 
-// Uncontrolled by design: `initialValue` seeds the editor once on mount and
-// further edits are reported via onChange — syncing a controlled value back
-// into Quill on every keystroke fights its own internal selection/undo
-// state. Callers that need to swap documents should remount via a `key`
-// prop (see DocumentEditor.tsx's `key={draft.id}`).
-export function RichTextEditor({ initialValue, onChange, placeholder }: {
+export function RichTextEditor({
+  initialValue,
+  onChange,
+  placeholder,
+}: {
   initialValue: string;
   onChange: (html: string) => void;
   placeholder?: string;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const quillRef = useRef<Quill | null>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
   const onChangeRef = useRef(onChange);
 
   useEffect(() => {
@@ -30,37 +26,71 @@ export function RichTextEditor({ initialValue, onChange, placeholder }: {
   }, [onChange]);
 
   useEffect(() => {
-    const container = containerRef.current;
-    // Guards against React 19 StrictMode's dev-only double-invoke of
-    // effects. Quill's snow theme also inserts its toolbar as a DOM
-    // *sibling* of the element it's attached to (not a child), so it's
-    // attached to a throwaway inner div rather than `container` directly —
-    // that way cleanup can wipe both the toolbar and editor by clearing
-    // `container`'s children in one shot.
-    if (!container || quillRef.current) return;
-    const editorEl = document.createElement('div');
-    container.appendChild(editorEl);
-    const quill = new Quill(editorEl, {
-      theme: 'snow',
-      placeholder,
-      modules: { toolbar: TOOLBAR },
-    });
-    quillRef.current = quill;
-    // dangerouslyPasteHTML inserts directly into a live contenteditable DOM
-    // via Quill's own HTML parser, bypassing React entirely — sanitize
-    // first so content saved before server-side sanitization existed (or
-    // written directly through the API) can't execute on open.
-    if (initialValue) quill.clipboard.dangerouslyPasteHTML(DOMPurify.sanitize(initialValue));
-    quill.on('text-change', () => {
-      const html = quill.root.innerHTML === '<p><br></p>' ? '' : DOMPurify.sanitize(quill.root.innerHTML);
-      onChangeRef.current(html);
-    });
-    return () => {
-      quillRef.current = null;
-      container.replaceChildren();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally uncontrolled; only re-init on remount (via key)
-  }, []);
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.innerHTML = sanitizeEditorHtml(initialValue);
+  }, [initialValue]);
 
-  return <div className="documents-rich-editor" ref={containerRef} />;
+  function emitChange() {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const html = sanitizeEditorHtml(editor.innerHTML);
+    if (html !== editor.innerHTML) editor.innerHTML = html;
+    onChangeRef.current(html === '<p><br></p>' ? '' : html);
+  }
+
+  function runCommand(command: string, value?: string) {
+    editorRef.current?.focus();
+    document.execCommand(command, false, value);
+    emitChange();
+  }
+
+  return (
+    <div className="documents-rich-editor">
+      <div className="documents-rich-editor__toolbar" aria-label="Formatting">
+        {COMMANDS.map((item) => (
+          <button
+            key={`${item.command}-${item.label}`}
+            type="button"
+            onClick={() => runCommand(item.command, 'value' in item ? item.value : undefined)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      <div
+        ref={editorRef}
+        className="documents-rich-editor__input"
+        contentEditable
+        data-placeholder={placeholder}
+        onInput={emitChange}
+        role="textbox"
+        aria-multiline="true"
+        suppressContentEditableWarning
+      />
+    </div>
+  );
+}
+
+function sanitizeEditorHtml(value: string): string {
+  return DOMPurify.sanitize(value, {
+    ALLOWED_TAGS: [
+      'p',
+      'br',
+      'strong',
+      'b',
+      'em',
+      'i',
+      'u',
+      's',
+      'blockquote',
+      'code',
+      'pre',
+      'ul',
+      'ol',
+      'li',
+      'a',
+    ],
+    ALLOWED_ATTR: ['href', 'target', 'rel'],
+  });
 }

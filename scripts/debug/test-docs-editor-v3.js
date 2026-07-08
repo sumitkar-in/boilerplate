@@ -1,10 +1,8 @@
 const { runTest, login } = require('./playwright-helper');
 
-runTest('test-docs-quill-v3', async (page) => {
-  
-    
-     => console.log('PAGEERROR:', err.message));
-  
+runTest('test-docs-editor-v3', async (page) => {
+    page.on('pageerror', (err) => console.log('PAGEERROR:', err.message));
+
     await login(page);
   
     await page.goto('http://localhost:5173/documents', { waitUntil: 'domcontentloaded' });
@@ -16,19 +14,17 @@ runTest('test-docs-quill-v3', async (page) => {
     await page.waitForTimeout(600);
     await page.screenshot({ path: 'shot-docs-newpage.png', fullPage: true });
   
-    // type into the quill editor
-    await page.click('.ql-editor');
-    await page.keyboard.type('Hello from Quill! ');
+    // type into the rich text editor
+    await page.click('.documents-rich-editor__input');
+    await page.keyboard.type('Hello from the document editor. ');
     await page.keyboard.press('Control+B');
     await page.keyboard.type('bold text');
     await page.keyboard.press('Control+B');
     await page.waitForTimeout(300);
     await page.screenshot({ path: 'shot-docs-typing.png', fullPage: true });
   
-    // click a heading format from toolbar
-    await page.click('.ql-toolbar .ql-header');
-    await page.waitForTimeout(200);
-    await page.click('.ql-picker-item[data-value="1"]');
+    // click a toolbar format
+    await page.click('.documents-rich-editor__toolbar button:has-text("Quote")');
     await page.waitForTimeout(300);
     await page.screenshot({ path: 'shot-docs-toolbar.png', fullPage: true });
   

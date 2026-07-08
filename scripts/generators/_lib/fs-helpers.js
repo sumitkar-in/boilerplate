@@ -20,11 +20,22 @@ function mkdir(absPath) {
 function writeFile(absPath, content, { force = false, rootForLog } = {}) {
   const display = rootForLog ? path.relative(rootForLog, absPath) : absPath;
   mkdir(path.dirname(absPath));
-  if (fs.existsSync(absPath) && !force) {
-    note(`skip   ${display} (already exists)`);
-    return false;
+  const flags = force ? 'w' : 'wx';
+  let handle;
+  try {
+    handle = fs.openSync(absPath, flags);
+  } catch (err) {
+    if (!force && err && err.code === 'EEXIST') {
+      note(`skip   ${display} (already exists)`);
+      return false;
+    }
+    throw err;
   }
-  fs.writeFileSync(absPath, content.endsWith('\n') ? content : content + '\n', 'utf8');
+  try {
+    fs.writeFileSync(handle, content.endsWith('\n') ? content : content + '\n', 'utf8');
+  } finally {
+    fs.closeSync(handle);
+  }
   note(`create ${display}`);
   return true;
 }

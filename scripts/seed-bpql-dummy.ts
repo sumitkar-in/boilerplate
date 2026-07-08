@@ -4,7 +4,7 @@
  * 
  * Run with: npm run seed:bpql
  */
-import * as https from 'https';
+import { randomInt } from 'crypto';
 
 // Standard demo tenant auth credentials
 const API_URL = process.env.API_URL || 'https://localhost/api';
@@ -18,7 +18,6 @@ async function makeRequest(
   token?: string,
   body?: any
 ) {
-  const agent = new https.Agent({ rejectUnauthorized: false });
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
@@ -30,8 +29,6 @@ async function makeRequest(
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
-    // @ts-ignore
-    agent
   });
 
   const contentType = response.headers.get('content-type');
@@ -93,10 +90,10 @@ async function run() {
     await makeRequest('POST', `${prefix}/tables/${trafficTable.slug}/rows`, token, {
       data: {
         date: d.toISOString().split('T')[0],
-        visitors: Math.floor(Math.random() * 5000) + 1000,
-        pageviews: Math.floor(Math.random() * 12000) + 3000,
-        bounceRate: Number((Math.random() * 0.4 + 0.3).toFixed(2)),
-        source: sources[Math.floor(Math.random() * sources.length)]
+        visitors: randomInt(1000, 6000),
+        pageviews: randomInt(3000, 15000),
+        bounceRate: Number((randomInt(30, 70) / 100).toFixed(2)),
+        source: sources[randomInt(0, sources.length)]
       }
     });
   }
@@ -105,11 +102,11 @@ async function run() {
   const statuses = ['New', 'Contacted', 'Qualified', 'Lost', 'Closed Won'];
   const companies = ['Acme Corp', 'Globex', 'Soylent', 'Initech', 'Umbrella Corp', 'Stark Ind.', 'Wayne Ent.'];
   for (let i = 0; i < 20; i++) {
-    const stat = statuses[Math.floor(Math.random() * statuses.length)];
-    const dealSize = stat === 'Lost' ? 0 : Math.floor(Math.random() * 50000) + 10000;
+    const stat = statuses[randomInt(0, statuses.length)];
+    const dealSize = stat === 'Lost' ? 0 : randomInt(10000, 60000);
     await makeRequest('POST', `${prefix}/tables/${salesTable.slug}/rows`, token, {
       data: {
-        leadName: companies[Math.floor(Math.random() * companies.length)] + ` #${i}`,
+        leadName: companies[randomInt(0, companies.length)] + ` #${i}`,
         status: stat,
         dealSize,
         isEnterprise: dealSize > 35000
