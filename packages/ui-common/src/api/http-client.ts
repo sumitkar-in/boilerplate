@@ -37,6 +37,19 @@ export class ApiError extends Error {
   }
 }
 
+// NestJS returns a plain string `message` for most thrown exceptions, but
+// class-validator's ValidationPipe returns `message` as an array of per-field
+// strings. `res.statusText` is also not a safe fallback — it's blank on
+// HTTP/2 responses in most browsers — so we always land on non-empty text.
+function extractErrorMessage(body: unknown, fallback: string): string {
+  if (body && typeof body === 'object' && 'message' in body) {
+    const message = (body as { message?: unknown }).message;
+    if (typeof message === 'string' && message) return message;
+    if (Array.isArray(message) && message.length > 0) return message.join(', ');
+  }
+  return fallback || 'Request failed';
+}
+
 export type HttpClient = {
   apiFetch: <T>(path: string, opts?: FetchOptions) => Promise<T>;
   apiDownload: (path: string) => Promise<Blob>;
@@ -126,11 +139,7 @@ export function createHttpClient(options: {
     }
     if (!res.ok) {
       const body: unknown = await res.json().catch(() => ({}));
-      const message =
-        body && typeof body === 'object' && 'message' in body && typeof body.message === 'string'
-          ? body.message
-          : res.statusText;
-      throw new ApiError(res.status, message);
+      throw new ApiError(res.status, extractErrorMessage(body, res.statusText));
     }
     if (res.status === 204) return undefined as T;
     return (await res.json()) as T;
@@ -155,11 +164,7 @@ export function createHttpClient(options: {
     }
     if (!res.ok || !res.body) {
       const body: unknown = await res.json().catch(() => ({}));
-      const message =
-        body && typeof body === 'object' && 'message' in body && typeof body.message === 'string'
-          ? body.message
-          : res.statusText;
-      throw new ApiError(res.status, message);
+      throw new ApiError(res.status, extractErrorMessage(body, res.statusText));
     }
 
     const reader = res.body.getReader();
