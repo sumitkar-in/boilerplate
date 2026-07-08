@@ -85,7 +85,8 @@ export function htmlToMarkdown(html: string): string {
       .replace(/<[^>]+>/g, '')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&');
+      .replace(/&amp;/g, '&')
+      .replace(/[<>]/g, '');
     return `\n\n\`\`\`\n${code}\n\`\`\`\n\n`;
   });
 
