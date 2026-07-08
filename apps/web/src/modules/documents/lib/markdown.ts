@@ -112,8 +112,12 @@ export function htmlToMarkdown(html: string): string {
   text = text.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1\n\n');
   text = text.replace(/<br\s*\/?>/gi, '\n');
 
-  // Strip all other HTML tags
-  text = text.replace(/<[^>]+>/g, '');
+  // Strip all other HTML tags (repeat until stable to avoid incomplete multi-character sanitization)
+  let previous: string;
+  do {
+    previous = text;
+    text = text.replace(/<[^>]+>/g, '');
+  } while (text !== previous);
 
   // Decode standard HTML entities
   text = text
