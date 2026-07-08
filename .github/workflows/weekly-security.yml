@@ -47,7 +47,7 @@ jobs:
 
       - name: Setup pnpm
         if: steps.sonar-config.outputs.enabled == 'true'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
         with:
           version: 11
 
