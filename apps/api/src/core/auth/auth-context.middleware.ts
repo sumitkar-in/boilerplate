@@ -102,11 +102,12 @@ export class AuthContextMiddleware implements NestMiddleware {
     // status, so revoking either takes effect immediately rather than
     // waiting for the access token to expire.
     let role: TenantRole;
-    let roleKey = 'viewer';
-    let permissions = new Set<string>(DEFAULT_ROLE_PERMISSIONS.viewer);
+    let roleKey: string;
+    let permissions: Set<string>;
     if (payload.sessionType === 'impersonation') {
       role = 'viewer';
       roleKey = 'viewer';
+      permissions = new Set(DEFAULT_ROLE_PERMISSIONS.viewer);
     } else if (user.isSuperAdmin) {
       role = 'owner';
       roleKey = 'owner';

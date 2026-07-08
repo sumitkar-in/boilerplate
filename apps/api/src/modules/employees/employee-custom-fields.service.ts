@@ -107,14 +107,16 @@ export class EmployeeCustomFieldsService {
     return `tenant:${tenant.tenantId}:employees:custom-fields`;
   }
 
-  private remember<T>(
+  private async remember<T>(
     tenant: TenantContext,
     key: string,
     ttlSeconds: number,
     loader: () => Promise<T>,
   ): Promise<T> {
     const cacheKey = `tenant:${tenant.tenantId}:${key}`;
-    return this.cache?.remember(cacheKey, ttlSeconds, loader) ?? loader();
+    const cached = this.cache?.remember(cacheKey, ttlSeconds, loader);
+    if (cached) return await cached;
+    return await loader();
   }
 
   private async invalidateCustomFields(tenant: TenantContext): Promise<void> {

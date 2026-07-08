@@ -27,6 +27,7 @@ const MODULES_DIR = join(__dirname, '../../modules');
 // (core/tenants has no tenant-schema migrations of its own yet), so that
 // no-op is behaviorally identical to the CLI (`pnpm tenant:create`) either way.
 const TENANT_MIGRATIONS_DIR = join(__dirname, '../../../../../drizzle/tenant');
+const SAFE_FEATURE_KEY = /^[a-z0-9][a-z0-9-]*$/;
 
 export type AvailableModule = { key: string; label: string };
 
@@ -92,6 +93,7 @@ export class TenantProvisioningService {
     try {
       await applyPendingMigrations(client, schemaName, TENANT_MIGRATIONS_DIR);
       for (const featureKey of features) {
+        assertSafeFeatureKey(featureKey);
         await applyPendingMigrations(
           client,
           schemaName,
@@ -117,6 +119,7 @@ export class TenantProvisioningService {
     if (!tenant) return;
     const client = await this.pool.connect();
     try {
+      assertSafeFeatureKey(featureKey);
       await applyPendingMigrations(
         client,
         tenant.schemaName,
@@ -156,5 +159,11 @@ export class TenantProvisioningService {
     } finally {
       client.release();
     }
+  }
+}
+
+function assertSafeFeatureKey(featureKey: string): void {
+  if (!SAFE_FEATURE_KEY.test(featureKey)) {
+    throw new BadRequestException(`Unsafe feature key: "${featureKey}"`);
   }
 }

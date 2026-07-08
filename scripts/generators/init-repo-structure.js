@@ -52,8 +52,7 @@ let filesSkipped = 0;
 
 function mkdir(relPath) {
   const full = path.join(ROOT, relPath);
-  if (!fs.existsSync(full)) {
-    fs.mkdirSync(full, { recursive: true });
+  if (fs.mkdirSync(full, { recursive: true })) {
     dirsCreated++;
   }
 }
@@ -61,12 +60,20 @@ function mkdir(relPath) {
 function writeFile(relPath, content) {
   const full = path.join(ROOT, relPath);
   mkdir(path.dirname(relPath));
-  if (fs.existsSync(full)) {
+  let handle;
+  try {
+    handle = fs.openSync(full, 'wx');
+  } catch (err) {
+    if (!err || err.code !== 'EEXIST') throw err;
     note(`skip   ${relPath} (already exists)`);
     filesSkipped++;
     return;
   }
-  fs.writeFileSync(full, content.endsWith('\n') ? content : content + '\n', 'utf8');
+  try {
+    fs.writeFileSync(handle, content.endsWith('\n') ? content : content + '\n', 'utf8');
+  } finally {
+    fs.closeSync(handle);
+  }
   note(`create ${relPath}`);
   filesCreated++;
 }

@@ -151,12 +151,15 @@ function main() {
 }
 
 function registerInLoaderFile(loaderPath, displayPath, entryLine) {
-  if (!fs.existsSync(loaderPath)) {
+  let content;
+  try {
+    content = fs.readFileSync(loaderPath, 'utf8');
+  } catch (err) {
+    if (err && err.code !== 'ENOENT') throw err;
     warn(`${displayPath} not found — skipping auto-registration. Add this entry by hand:\n    ${entryLine}`);
     return;
   }
 
-  let content = fs.readFileSync(loaderPath, 'utf8');
   if (content.includes(entryLine)) {
     note(`${displayPath} already registers this module — skipping`);
     return;

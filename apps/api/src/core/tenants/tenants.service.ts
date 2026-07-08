@@ -325,7 +325,9 @@ export class TenantsService {
     ttlSeconds: number,
     loader: () => Promise<T>,
   ): Promise<T> {
-    return this.cache?.remember(key, ttlSeconds, loader) ?? loader();
+    const cached = this.cache?.remember(key, ttlSeconds, loader);
+    if (cached) return await cached;
+    return await loader();
   }
 
   private async invalidateTenant(tenantId: string): Promise<void> {

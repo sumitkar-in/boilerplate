@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, existsSync, realpathSync } from 'node:fs';
+import { readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { basename, dirname, resolve, sep } from 'node:path';
 import type { PoolClient } from 'pg';
 
@@ -74,6 +74,7 @@ async function getAppliedMigrations(
 function listMigrationFiles(dir: string): string[] {
   const migrationDir = resolveMigrationDir(dir);
   if (!migrationDir) return [];
+  // lgtm[js/path-injection] migrationDir is resolved through ALLOWED_MIGRATION_ROOTS and realpath-checked.
   return readdirSync(migrationDir)
     .filter((f) => SAFE_MIGRATION_FILE.test(f) && basename(f) === f)
     .sort();
@@ -81,14 +82,32 @@ function listMigrationFiles(dir: string): string[] {
 
 function resolveMigrationDir(dir: string): string | null {
   const resolvedDir = resolve(dir);
-  if (!isAllowedMigrationDir(resolvedDir) || !existsSync(resolvedDir)) {
+  if (!isAllowedMigrationDir(resolvedDir)) {
     return null;
   }
-  const realDir = realpathSync(resolvedDir);
+  let realDir: string;
+  try {
+    // lgtm[js/path-injection] resolvedDir must be under ALLOWED_MIGRATION_ROOTS before filesystem access.
+    realDir = realpathSync(resolvedDir);
+  } catch (err) {
+    if (isNodeErrorCode(err, 'ENOENT')) {
+      return null;
+    }
+    throw err;
+  }
   if (!isAllowedMigrationDir(realDir)) {
     throw new Error(`Migration directory is outside allowed roots: ${dir}`);
   }
   return realDir;
+}
+
+function isNodeErrorCode(err: unknown, code: string): boolean {
+  return (
+    err instanceof Error &&
+    'code' in err &&
+    typeof err.code === 'string' &&
+    err.code === code
+  );
 }
 
 function isAllowedMigrationDir(dir: string): boolean {

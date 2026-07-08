@@ -405,6 +405,7 @@ export class KnowledgeBotService {
   }
 
   private writeSse(res: Response, chunk: AiChatStreamChunk): void {
+    // lgtm[js/reflected-xss] SSE frames are served as text/event-stream with nosniff and JSON HTML-sensitive chars escaped.
     res.write(formatSseJsonFrame(chunk));
   }
 

@@ -320,16 +320,19 @@ export class DocumentsService {
     return `tenant:${tenant.tenantId}:${key}`;
   }
 
-  private remember<T>(
+  private async remember<T>(
     tenant: TenantContext,
     key: string,
     ttlSeconds: number,
     loader: () => Promise<T>,
   ): Promise<T> {
-    return (
-      this.cache?.remember(this.cacheKey(tenant, key), ttlSeconds, loader) ??
-      loader()
+    const cached = this.cache?.remember(
+      this.cacheKey(tenant, key),
+      ttlSeconds,
+      loader,
     );
+    if (cached) return await cached;
+    return await loader();
   }
 
   private async invalidateSpaces(tenant: TenantContext): Promise<void> {
