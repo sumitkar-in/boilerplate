@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
-import { Bold, Italic, Underline, List, Quote } from 'lucide-react';
+import { Bold, Italic, Underline, List, Quote, Code } from 'lucide-react';
 
 const COMMANDS = [
   { command: 'bold', label: 'Bold', icon: Bold },
@@ -8,6 +8,7 @@ const COMMANDS = [
   { command: 'underline', label: 'Underline', icon: Underline },
   { command: 'insertUnorderedList', label: 'Bulleted list', icon: List },
   { command: 'formatBlock', label: 'Quote', icon: Quote, value: 'blockquote' },
+  { command: 'formatBlock', label: 'Code block', icon: Code, value: 'pre' },
 ] as const;
 
 export function RichTextEditor({
@@ -27,16 +28,33 @@ export function RichTextEditor({
   }, [onChange]);
 
   useEffect(() => {
+    // Runs once on mount only (the parent remounts via `key={draft.id}` on page switch).
+    // Re-running this on every `initialValue` change would fight the user's own typing:
+    // onChange feeds edits back into `initialValue`, and resetting innerHTML on each
+    // keystroke collapses the caret to the start of the editor.
     const editor = editorRef.current;
     if (!editor) return;
     editor.innerHTML = sanitizeEditorHtml(initialValue);
-  }, [initialValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function emitChange() {
     const editor = editorRef.current;
     if (!editor) return;
     const html = sanitizeEditorHtml(editor.innerHTML);
-    if (html !== editor.innerHTML) editor.innerHTML = html;
+    if (html !== editor.innerHTML) {
+      editor.innerHTML = html;
+      // Sanitization rewrote the DOM, so the caret was dropped — put it back at the end
+      // rather than leaving it collapsed at position 0.
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+    }
     onChangeRef.current(html === '<p><br></p>' ? '' : html);
   }
 
@@ -80,6 +98,13 @@ export function RichTextEditor({
           if (beforeCaret === '>') {
             e.preventDefault();
             document.execCommand('formatBlock', false, 'blockquote');
+            node.textContent = text.slice(offset);
+            emitChange();
+            return;
+          }
+          if (beforeCaret === '```') {
+            e.preventDefault();
+            document.execCommand('formatBlock', false, 'pre');
             node.textContent = text.slice(offset);
             emitChange();
             return;

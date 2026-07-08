@@ -10,11 +10,24 @@ export function markdownToHtml(markdown: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+  // Pull fenced code blocks out before splitting on blank lines, since a code block
+  // can legitimately contain blank lines that would otherwise be read as paragraph breaks.
+  const codeBlocks: string[] = [];
+  const withPlaceholders = html.replace(/```[^\n]*\n?([\s\S]*?)```/g, (_match, code: string) => {
+    const index = codeBlocks.push(code.replace(/\n$/, '')) - 1;
+    return `CODEBLOCKPLACEHOLDER${index}END`;
+  });
+
   // Split into paragraphs/blocks by double newline
-  const blocks = html.split(/\n\n+/);
+  const blocks = withPlaceholders.split(/\n\n+/);
   const convertedBlocks = blocks.map((block) => {
     const line = block.trim();
     if (!line) return '';
+
+    const codeBlockMatch = line.match(/^CODEBLOCKPLACEHOLDER(\d+)END$/);
+    if (codeBlockMatch) {
+      return `<pre><code>${codeBlocks[Number(codeBlockMatch[1])]}</code></pre>`;
+    }
 
     // Headers
     if (line.startsWith('### ')) {
@@ -62,6 +75,19 @@ function convertInlineMarkdown(text: string): string {
 export function htmlToMarkdown(html: string): string {
   if (!html) return '';
   let text = html;
+
+  // Code blocks (handled first: pre content should not go through the inline/paragraph rules below)
+  text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_match, inner: string) => {
+    const code = inner
+      .replace(/<code[^>]*>/gi, '')
+      .replace(/<\/code>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&');
+    return `\n\n\`\`\`\n${code}\n\`\`\`\n\n`;
+  });
 
   // Blockquotes
   text = text.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, '> $1\n\n');
