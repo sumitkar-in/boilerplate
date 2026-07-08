@@ -177,11 +177,12 @@ export class TenantsService {
     tenantId: string,
     status: TenantRecord['status'],
   ): Promise<void> {
+    const tenant = await this.findById(tenantId);
     await this.db
       .update(tenants)
       .set({ status, updatedAt: new Date() })
       .where(eq(tenants.id, tenantId));
-    await this.invalidateTenant(tenantId);
+    await this.invalidateTenant(tenantId, tenant?.slug);
   }
 
   // Pre-auth, public — only the fields needed to brand the login screen.
@@ -298,7 +299,7 @@ export class TenantsService {
         logoUrl: tenants.logoUrl,
         settings: tenants.settings,
       });
-    await this.invalidateTenant(tenantId);
+    await this.invalidateTenant(tenantId, current?.tenantSlug);
     return tenant
       ? {
           ...tenant,
@@ -331,7 +332,19 @@ export class TenantsService {
     return await this.cache.remember(key, ttlSeconds, loader);
   }
 
-  private async invalidateTenant(tenantId: string): Promise<void> {
+  private async invalidateTenant(
+    tenantId: string,
+    slug?: string,
+  ): Promise<void> {
+    const keys = [
+      `tenant:${tenantId}:record`,
+      `tenant:${tenantId}:public-branding`,
+      `tenant:${tenantId}:settings`,
+    ];
+    if (slug) {
+      keys.push(`tenant:slug:${slug}`);
+    }
+    await this.cache?.del(...keys);
     await this.cache?.deleteByPattern(`tenant:${tenantId}:*`);
   }
 }
