@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile
 ENV VITE_API_URL=/api/v1
 RUN pnpm --filter web... build
 
-FROM nginx:1.27-alpine
+FROM nginx:1.31-alpine
 # Fallback certs baked into the image, used only if the host doesn't mount
 # infra/docker/nginx/certs (see setup.sh, which generates locally-trusted
 # mkcert certs there). Browsers won't trust this fallback pair.
