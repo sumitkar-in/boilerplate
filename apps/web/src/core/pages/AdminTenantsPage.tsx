@@ -91,7 +91,7 @@ export function AdminTenantsPage() {
     setSelectedFeatures(new Set());
   }
 
-  async function handleToggleStatus(tenant: AdminTenantRow) {
+  const handleToggleStatus = useCallback(async (tenant: AdminTenantRow) => {
     setError(null);
     try {
       await apiUpdateTenantStatus(tenant.id, tenant.status === 'active' ? 'suspended' : 'active');
@@ -99,9 +99,9 @@ export function AdminTenantsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not update tenant status');
     }
-  }
+  }, [loadTenants]);
 
-  async function handleDeleteTenant(tenant: AdminTenantRow) {
+  const handleDeleteTenant = useCallback(async (tenant: AdminTenantRow) => {
     if (!window.confirm(t('adminTenants.deleteConfirm', { slug: tenant.slug }))) return;
     setError(null);
     try {
@@ -110,7 +110,7 @@ export function AdminTenantsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not delete tenant');
     }
-  }
+  }, [loadTenants, t]);
 
   const columns = useMemo<AdvancedTableColumn<AdminTenantRow>[]>(
     () => [

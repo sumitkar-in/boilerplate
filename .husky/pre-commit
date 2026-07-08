@@ -1,13 +1,17 @@
 #!/usr/bin/env sh
+set -e
 
 # 1. Lint & auto-fix every staged TS/TSX file
 pnpm exec lint-staged
 
 # 2. API unit tests — block commit on any failure
-# (unit tests only — no DB required; e2e tests run in CI)
 echo "🧪 Running API unit tests…"
 pnpm --filter api test --passWithNoTests
 
-# 3. Security audit — block commit if HIGH or CRITICAL vulnerabilities are found
+# 3. API e2e tests — block commit if the integrated API flow regresses
+echo "🧪 Running API e2e tests…"
+pnpm --filter api test:e2e
+
+# 4. Security audit — block commit if HIGH or CRITICAL vulnerabilities are found
 echo "🔒 Running pnpm audit (--audit-level=high)…"
 pnpm audit --audit-level=high

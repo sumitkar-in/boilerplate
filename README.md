@@ -144,16 +144,18 @@ pnpm dev:mobile   # optional
 
 ## 🛡️ Pre-commit Hooks
 
-Every commit automatically runs three gates via **Husky**:
+Every commit automatically runs four gates via **Husky**:
 
 1. **Lint** (`lint-staged`) — ESLint `--fix` on staged `.ts` / `.tsx` files only
 2. **Tests** — All 200+ API unit tests must pass (≈ 4 s, no DB required)
-3. **Security audit** (`pnpm audit --audit-level=high`) — blocks on HIGH/CRITICAL CVEs
+3. **E2E tests** — API integration flows must pass against the local test database
+4. **Security audit** (`pnpm audit --audit-level=high`) — blocks on HIGH/CRITICAL CVEs
 
 ```bash
 # Run manually at any time
 pnpm lint          # lint all workspaces
 pnpm --filter api test  # run unit tests
+pnpm --filter api test:e2e  # run e2e tests
 pnpm audit --audit-level=high
 ```
 
