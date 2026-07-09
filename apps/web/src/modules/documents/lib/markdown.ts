@@ -78,15 +78,33 @@ export function htmlToMarkdown(html: string): string {
 
   // Code blocks (handled first: pre content should not go through the inline/paragraph rules below)
   text = text.replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_match, inner: string) => {
-    const code = inner
+    let code = inner
       .replace(/<code[^>]*>/gi, '')
       .replace(/<\/code>/gi, '')
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<[^>]+>/g, '')
+      .replace(/<br\s*\/?>/gi, '\n');
+
+    // Strip HTML tags until stable to avoid incomplete multi-character sanitization.
+    let previousCode: string;
+    do {
+      previousCode = code;
+      code = code.replace(/<[^>]+>/g, '');
+    } while (code !== previousCode);
+
+    // Decode standard HTML entities.
+    code = code
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
-      .replace(/&amp;/g, '&')
-      .replace(/[<>]/g, '');
+      .replace(/&amp;/g, '&');
+
+    // Strip again after decoding in case tags reappear.
+    do {
+      previousCode = code;
+      code = code.replace(/<[^>]+>/g, '');
+    } while (code !== previousCode);
+
+    // Final hardening: remove any remaining angle brackets.
+    code = code.replace(/[<>]/g, '');
+
     return `\n\n\`\`\`\n${code}\n\`\`\`\n\n`;
   });
 
