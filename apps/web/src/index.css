@@ -3431,17 +3431,17 @@ textarea.ui-table__cell-input {
 }
 
 .ui-searchable-select__popover {
-  position: absolute;
-  z-index: 1040;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
+  position: fixed;
+  z-index: 1050;
   min-width: min(280px, calc(100vw - 32px));
   padding: 8px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+}
+
+.ui-searchable-select__popover--up {
 }
 
 .ui-searchable-select__popover input {

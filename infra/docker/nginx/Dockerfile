@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
 FROM node:26-alpine AS web-build
+RUN apk add --no-cache python3 make g++ gcc
 RUN npm i -g pnpm@11.10.0
 WORKDIR /repo
 COPY pnpm-workspace.yaml pnpm-lock.yaml package.json ./

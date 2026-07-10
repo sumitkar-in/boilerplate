@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -78,6 +79,24 @@ export interface SearchableSelectProps {
   onValueChange: (value: string) => void;
 }
 
+function getScrollParent(node: HTMLElement | null): HTMLElement | null {
+  if (!node) return null;
+  let parent = node.parentElement;
+  while (parent) {
+    const style = window.getComputedStyle(parent);
+    const hasScrollClass = parent.classList.contains('ui-modal__body');
+    const isScrollable =
+      parent.scrollHeight > parent.clientHeight &&
+      (style.overflowY === 'auto' || style.overflowY === 'scroll');
+
+    if (hasScrollClass || isScrollable) {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  return null;
+}
+
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   label,
   error,
@@ -93,13 +112,86 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   onValueChange,
 }) => {
   const selectId = id || (label ? `searchable-select-${label.replace(/\s+/g, '-').toLowerCase()}` : undefined);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
   const [isOpen, setIsOpen] = React.useState(false);
+  const [openUpwards, setOpenUpwards] = React.useState(false);
   const [query, setQuery] = React.useState('');
+  const [popoverStyle, setPopoverStyle] = React.useState<React.CSSProperties>({});
+  
   const selected = options.find((option) => String(option.value) === String(value));
   const filteredOptions = options.filter((option) => {
     const normalized = `${option.label} ${option.description ?? ''}`.toLowerCase();
     return normalized.includes(query.trim().toLowerCase());
   });
+
+  React.useEffect(() => {
+    function updatePosition() {
+      if (isOpen && buttonRef.current && containerRef.current) {
+        const buttonRect = buttonRef.current.getBoundingClientRect();
+        const scrollParent = getScrollParent(containerRef.current);
+        
+        let spaceBelow = window.innerHeight - buttonRect.bottom;
+        let spaceAbove = buttonRect.top;
+        
+        if (scrollParent) {
+          const parentRect = scrollParent.getBoundingClientRect();
+          spaceBelow = parentRect.bottom - buttonRect.bottom;
+          spaceAbove = buttonRect.top - parentRect.top;
+        }
+        
+        const shouldOpenUpwards = spaceBelow < 280 && spaceAbove > spaceBelow;
+        // Use viewport coords (no scroll offset) because position:fixed is
+        // relative to the viewport, not the document. getBoundingClientRect()
+        // already gives viewport-relative values.
+        const top = shouldOpenUpwards
+          ? buttonRect.top - 4
+          : buttonRect.bottom + 4;
+
+        setPopoverStyle({
+          position: 'fixed',
+          zIndex: 1050,
+          top: `${top}px`,
+          left: `${buttonRect.left}px`,
+          width: `${buttonRect.width}px`,
+          right: 'auto',
+          transform: shouldOpenUpwards ? 'translateY(-100%)' : 'none',
+        });
+        setOpenUpwards(shouldOpenUpwards);
+      }
+    }
+
+    if (isOpen) {
+      updatePosition();
+      window.addEventListener('scroll', updatePosition, true);
+      window.addEventListener('resize', updatePosition);
+    }
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen]);
+
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+      const clickedInsideContainer = containerRef.current?.contains(target);
+      const clickedInsidePopover = document.querySelector('.ui-searchable-select__popover')?.contains(target);
+      
+      if (!clickedInsideContainer && !clickedInsidePopover) {
+        setIsOpen(false);
+        setQuery('');
+      }
+    }
+    
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   function choose(nextValue: string | number) {
     onValueChange(String(nextValue));
@@ -109,13 +201,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
 
   return (
     <div
+      ref={containerRef}
       className={`ui-field ui-searchable-select ${className}`.trim()}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) {
-          setIsOpen(false);
-          setQuery('');
-        }
-      }}
     >
       {label && (
         <label htmlFor={selectId}>
@@ -123,6 +210,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         </label>
       )}
       <button
+        ref={buttonRef}
         id={selectId}
         type="button"
         className={`${error ? 'ui-input--error' : ''}`.trim()}
@@ -133,8 +221,11 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
       >
         <span>{selected?.label ?? placeholder}</span>
       </button>
-      {isOpen && (
-        <div className="ui-searchable-select__popover">
+      {isOpen && createPortal(
+        <div 
+          className={`ui-searchable-select__popover ${openUpwards ? 'ui-searchable-select__popover--up' : ''}`.trim()}
+          style={popoverStyle}
+        >
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -160,7 +251,8 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
               ))
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
       {error && <span className="ui-field__error">{error}</span>}
       {!error && helperText && <span className="ui-field__hint">{helperText}</span>}

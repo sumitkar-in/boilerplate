@@ -4,6 +4,7 @@
 # because this is a pnpm workspace — apps/api's lockfile lives at the root.
 
 FROM node:26-alpine AS base
+RUN apk add --no-cache python3 make g++ gcc
 RUN npm i -g pnpm@11.10.0
 WORKDIR /repo
 
