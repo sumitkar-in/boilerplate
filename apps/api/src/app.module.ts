@@ -35,6 +35,7 @@ import { BpqlModule } from './modules/bpql/bpql.module';
 import { KnowledgeBotModule } from './modules/knowledge-bot/knowledge-bot.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { VisitorModule } from './modules/visitors/visitors.module';
 // Toggles the Prometheus /metrics endpoint and its collection
 // interceptor — leave off unless the `observability` compose profile
 // (infra/docker/docker-compose.yml) is actually running. See README
@@ -108,6 +109,7 @@ const nestLensEnabled =
     TenantsModule,
     AuthModule,
     // feature modules are registered below this line, one per generated module — see scripts/generators/generate-module.js
+    VisitorModule,
     NotificationsModule,
     DepartmentsModule,
     EmployeesModule,

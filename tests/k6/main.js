@@ -12,6 +12,7 @@ import { createSpace, listSpaces, createPage, listPages, updatePage } from './sc
 import { listNotifications } from './scenarios/notification.js';
 import { createCustomField, listCustomFields, updateCustomField, createEmployee, listEmployees, updateEmployee } from './scenarios/employee.js';
 // generated scenario imports are appended below this line — see scripts/generators/generate-k6-scenario.js
+import { createVisitor, listVisitors, updateVisitor, deleteVisitor } from './scenarios/visitor.js';
 
 export const options = {
   scenarios: {
@@ -152,6 +153,13 @@ export default function (data) {
     listNotifications(tenantToken, tenantId);
 
     // generated module scenario calls are inserted below this line — see scripts/generators/generate-k6-scenario.js
+    // Visitors
+    const visitorRes = createVisitor(tenantToken, tenantId, 1);
+    if (visitorRes && visitorRes.id) {
+      listVisitors(tenantToken, tenantId);
+      updateVisitor(tenantToken, tenantId, visitorRes.id);
+      deleteVisitor(tenantToken, tenantId, visitorRes.id);
+    }
 
   } finally {
     // Delete tenant to clean up all schema data and avoid leaks

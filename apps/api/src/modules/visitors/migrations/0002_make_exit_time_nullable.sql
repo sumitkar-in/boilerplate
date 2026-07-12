@@ -1,0 +1,1 @@
+ALTER TABLE visitors ALTER COLUMN exit_time DROP NOT NULL;

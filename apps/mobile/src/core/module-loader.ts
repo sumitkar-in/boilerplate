@@ -13,6 +13,7 @@ export type FeatureModule = {
 // platforms — see §11.4 of the architecture doc. See: skills/frontend-module/SKILL.md
 const featureModules: FeatureModule[] = [
   // new modules are appended below this line — see scripts/generators/generate-frontend-module.js
+  { key: 'visitors', load: () => import('../modules/visitors/navigation') },
   { key: 'employees', load: () => import('../modules/employees/navigation') },
   { key: 'notes', load: () => import('../modules/notes/navigation') },
 ];

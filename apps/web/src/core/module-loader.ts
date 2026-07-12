@@ -18,6 +18,7 @@ export type FeatureModule = {
 // import() for it. See: skills/frontend-module/SKILL.md
 const featureModules: FeatureModule[] = [
   // new modules are appended below this line — see scripts/generators/generate-frontend-module.js
+  { key: 'visitors', load: () => import('../modules/visitors/routes') },
   { key: 'calendar', load: () => import('../modules/calendar/routes') },
   { key: 'departments', load: () => import('../modules/departments/routes') },
   { key: 'employees', load: () => import('../modules/employees/routes') },
