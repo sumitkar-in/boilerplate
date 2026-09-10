@@ -45,7 +45,7 @@
     "ioredis": "^5.4.2",
     "nestjs-pino": "^4.6.1",
     "nestlens": "^0.4.2",
-    "nodemailer": "^9.0.3",
+    "nodemailer": "^9.1.1",
     "otplib": "^12.0.1",
     "pg": "^8.13.1",
     "pino": "^10.3.1",
