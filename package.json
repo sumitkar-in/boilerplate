@@ -72,7 +72,7 @@
     "dotenv": "^17.4.2",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8",
-    "pg": "^8.22.0"
+    "pg": "^8.23.0"
   },
   "lint-staged": {
     "apps/api/**/*.ts": [
